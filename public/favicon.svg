@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48">
+  <defs>
+    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#D9865F" />
+      <stop offset="100%" stop-color="#F1B894" />
+    </linearGradient>
+  </defs>
+  <!-- 圆角背景 -->
+  <rect width="48" height="48" rx="14" fill="url(#grad)" />
+  <!-- 温馨小房屋 -->
+  <path d="M24 11 L10 24 H15 V37 A1 1 0 0 0 16 38 H32 A1 1 0 0 0 33 37 V24 H38 Z" fill="#FFFFFF" />
+  <!-- 爱心图案 -->
+  <path d="M24 28.5 C24 28.5 21 26 21 24.5 C21 23.5 21.8 22.7 22.8 22.7 C23.4 22.7 23.8 23 24 23.3 C24.2 23 24.6 22.7 25.2 22.7 C26.2 22.7 27 23.5 27 24.5 C27 26 24 28.5 24 28.5 Z" fill="#D9865F" />
+</svg>
