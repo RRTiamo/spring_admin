@@ -56,6 +56,7 @@ import ThemeConfig from './components/ThemeConfig.vue'
 import BrandConfig from './components/BrandConfig.vue'
 import DatabaseConfig from './components/DatabaseConfig.vue'
 import BeianConfig from './components/BeianConfig.vue'
+import AiConfig from './components/AiConfig.vue'
 
 const activeTab = ref('storage')
 
@@ -88,7 +89,8 @@ const tabsList = [
   { name: 'theme', label: '自定义主题 (Theme)', icon: 'i-mdi-palette-outline' },
   { name: 'brand', label: '全站与开屏配置 (Brand)', icon: 'i-mdi-flower' },
   { name: 'database', label: '数据库配置 (Database)', icon: 'i-mdi-database-outline' },
-  { name: 'beian', label: '备案信息 (Beian)', icon: 'i-mdi-shield-check-outline' }
+  { name: 'beian', label: '备案信息 (Beian)', icon: 'i-mdi-shield-check-outline' },
+  { name: 'ai', label: 'AI 服务配置 (DeepSeek)', icon: 'i-mdi-robot-outline' }
 ]
 
 const currentTabComponent = computed(() => {
@@ -99,7 +101,8 @@ const currentTabComponent = computed(() => {
     theme: ThemeConfig,
     brand: BrandConfig,
     database: DatabaseConfig,
-    beian: BeianConfig
+    beian: BeianConfig,
+    ai: AiConfig
   }
   return map[activeTab.value]
 })
