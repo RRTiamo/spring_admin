@@ -139,6 +139,7 @@ const formModel = ref({
 const formRules = {
   title: { required: true, message: '请输入文章标题', trigger: 'blur' },
   content: { required: true, message: '请输入文章正文内容', trigger: 'blur' },
+  cover: { required: true, message: '请上传、选择或填写文章封面', trigger: ['blur', 'change'] },
   categoryId: { required: true, type: 'number', message: '请选择文章归档分类', trigger: 'change' }
 }
 
@@ -294,7 +295,7 @@ const openCreate = () => {
     categoryId: categories.value[0]?.id || null,
     mood: 'quiet',
     visibility: 'public',
-    cover: '/assets/writing-tokyo.png'
+    cover: ''
   }
   showEditor.value = true
 }
@@ -312,7 +313,7 @@ const openEdit = (blog: Blog) => {
     categoryId: blog.categoryId ? Number(blog.categoryId) : null,
     mood: blog.mood || 'quiet',
     visibility: blog.visibility || 'public',
-    cover: blog.cover
+    cover: blog.cover || ''
   }
   showEditor.value = true
 }
@@ -402,10 +403,32 @@ const generateAISummary = async () => {
   }
 }
 
-// 导入 Markdown 文件
-const handleImportMarkdownContent = (text: string) => {
+// 从 Markdown 正文中提取第一个一级标题
+const extractH1Title = (markdownText: string): string => {
+  if (!markdownText) return ''
+
+  // 1. 匹配 Atx 风格一级标题: ^# 标题 或 \n# 标题
+  const atxMatch = markdownText.match(/(?:^|\n)#\s+([^\n]+)/)
+  if (atxMatch && atxMatch[1].trim()) {
+    return atxMatch[1].trim().replace(/^[*_~`]+|[*_~`]+$/g, '')
+  }
+
+  // 2. 匹配 Setext 风格一级标题 (标题文本\n===)
+  const setextMatch = markdownText.match(/(?:^|\n)([^\n]+)\r?\n=+\s*(?:\n|$)/)
+  if (setextMatch && setextMatch[1].trim()) {
+    return setextMatch[1].trim()
+  }
+
+  return ''
+}
+
+// 导入 Markdown 文件；正文中的远程图片链接由渲染器直接解析
+const handleImportMarkdownContent = (content: string) => {
   const frontmatterRegex = /^---\r?\n([\s\S]*?)\r?\n---\r?\n([\s\S]*)$/
-  const match = frontmatterRegex.exec(text)
+  const match = frontmatterRegex.exec(content)
+
+  let extractedTitle = ''
+  let body = content.trim()
 
   if (match) {
     const yamlContent = match[1]
@@ -421,25 +444,36 @@ const handleImportMarkdownContent = (text: string) => {
       }
     })
 
-    formModel.value.title = meta['title'] || '导入文章'
+    body = bodyContent.trim()
+    extractedTitle = meta['title'] || extractH1Title(body)
+
+    formModel.value.title = extractedTitle || '导入文章'
     formModel.value.slug = meta['slug'] || ''
-    formModel.value.tags = meta['tags'] ? meta['tags'].split(',').map((t) => t.trim()).filter(Boolean) : []
+    formModel.value.tags = meta['tags'] ? meta['tags'].split(',').map((tag) => tag.trim()).filter(Boolean) : []
     formModel.value.summary = meta['description'] || meta['summary'] || ''
     formModel.value.category = meta['category'] || 'Thoughts'
+    formModel.value.categoryId = meta['categoryid']
+      ? Number(meta['categoryid'])
+      : (categories.value[0]?.id || null)
     formModel.value.mood = meta['mood'] || 'quiet'
     formModel.value.visibility = meta['visibility'] || 'public'
-    formModel.value.cover = meta['cover'] || '/assets/writing-camera.png'
-    formModel.value.content = bodyContent.trim()
-  } else {
-    formModel.value.title = '导入文章'
-    formModel.value.content = text.trim()
-    formModel.value.tags = []
-    formModel.value.summary = ''
-    formModel.value.category = 'Thoughts'
-    formModel.value.mood = 'quiet'
-    formModel.value.visibility = 'public'
-    formModel.value.cover = '/assets/writing-camera.png'
+    formModel.value.cover = meta['cover'] || ''
+    formModel.value.content = body
+    return
   }
+
+  extractedTitle = extractH1Title(body)
+
+  formModel.value.title = extractedTitle || '导入文章'
+  formModel.value.slug = ''
+  formModel.value.content = body
+  formModel.value.tags = []
+  formModel.value.summary = ''
+  formModel.value.category = 'Thoughts'
+  formModel.value.categoryId = categories.value[0]?.id || null
+  formModel.value.mood = 'quiet'
+  formModel.value.visibility = 'public'
+  formModel.value.cover = ''
 }
 
 // 图册封面选择器

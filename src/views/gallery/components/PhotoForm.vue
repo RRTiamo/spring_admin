@@ -83,7 +83,7 @@
               />
               
               <n-upload
-                action="http://localhost:8080/api/blogs/upload?type=gallery"
+                action="/api/blogs/upload?type=gallery"
                 :headers="uploadHeaders"
                 :show-file-list="false"
                 @finish="handleUploadFinish"

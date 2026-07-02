@@ -95,7 +95,7 @@
 
         <div class="grid grid-cols-2 gap-2 mb-6">
           <n-upload
-            action="http://localhost:8080/api/blogs/upload?type=love"
+            action="/api/blogs/upload?type=love"
             :headers="uploadHeaders"
             :show-file-list="false"
             @finish="handleAtmosphereUploadFinish"

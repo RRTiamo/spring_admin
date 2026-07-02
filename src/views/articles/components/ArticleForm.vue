@@ -15,25 +15,25 @@
       </div>
 
       <div class="flex items-center gap-2">
-        <n-button size="small" secondary type="warning" @click="triggerFileInput">
+        <n-button size="small" secondary type="primary" @click="triggerFileInput">
           <template #icon>
             <span class="i-mdi-file-import-outline"></span>
           </template>
           导入 Markdown (.md)
         </n-button>
-        <input 
-          type="file" 
-          ref="fileInputRef" 
-          accept=".md" 
-          style="display: none" 
-          @change="handleImportMarkdown" 
+        <input
+          type="file"
+          ref="fileInputRef"
+          accept=".md,text/markdown"
+          class="hidden"
+          @change="handleImportMarkdown"
         />
       </div>
     </div>
 
     <!-- 导言提醒 -->
     <p class="m-0 text-xs tone-muted">
-      在这里可以享受宽广的随笔写作空间。支持直接使用 Markdown 格式输入正文，或者通过右上角按钮直接导入本地 Markdown 随笔文件。
+      支持直接使用 Markdown 格式输入正文，也可以通过右上角按钮导入由 Typora、PicGo 等工具处理好的 Markdown 文件。
     </p>
 
     <n-form ref="formRef" :model="formModel" :rules="formRules" label-placement="top">
@@ -77,7 +77,7 @@
           <div class="flex-1 space-y-2.5 w-full">
             <!-- 上传与输入组合 -->
             <div class="flex items-center gap-2 w-full">
-              <n-input v-model:value="formModel.cover" placeholder="输入路径（如 /assets/writing-tokyo.png）或上传图片" class="flex-1" />
+              <n-input v-model:value="formModel.cover" placeholder="请输入封面地址，或使用右侧按钮选择图片" class="flex-1" />
               
               <n-button type="info" secondary round @click="emit('open-gallery')" class="shrink-0">
                 <template #icon>
@@ -87,7 +87,7 @@
               </n-button>
 
               <n-upload
-                action="http://localhost:8080/api/blogs/upload?type=blog"
+                action="/api/blogs/upload?type=blog"
                 :headers="uploadHeaders"
                 :show-file-list="false"
                 @finish="handleUploadFinish"
@@ -190,13 +190,19 @@ const triggerFileInput = () => {
 
 const handleImportMarkdown = (event: Event) => {
   const input = event.target as HTMLInputElement
-  if (!input.files || input.files.length === 0) return
-  const file = input.files[0]
+  const file = input.files?.[0]
+  if (!file) return
+
   const reader = new FileReader()
-  reader.onload = (e) => {
-    const text = e.target?.result as string
-    emit('import-md', text)
-    message.success(`本地 Markdown 文件「${file.name}」导入成功！`)
+  reader.onload = (loadEvent) => {
+    const content = String(loadEvent.target?.result || '').replace(/^\uFEFF/, '')
+    emit('import-md', content)
+    message.success(`Markdown 文件「${file.name}」导入成功`)
+    input.value = ''
+  }
+  reader.onerror = () => {
+    message.error(`无法读取 Markdown 文件「${file.name}」`)
+    input.value = ''
   }
   reader.readAsText(file)
 }

@@ -81,7 +81,7 @@
                 </div>
                 <div class="flex items-center gap-3">
                   <n-upload
-                    action="http://localhost:8080/api/blogs/upload?type=about"
+                    action="/api/blogs/upload?type=about"
                     :headers="uploadHeaders"
                     :show-file-list="false"
                     @finish="handleAvatarUploadFinish"
@@ -161,7 +161,7 @@
                         </div>
                         <div class="flex items-center gap-3">
                           <n-upload
-                            action="http://localhost:8080/api/blogs/upload?type=about"
+                            action="/api/blogs/upload?type=about"
                             :headers="uploadHeaders"
                             :show-file-list="false"
                             @finish="(event) => handleCoordinateUploadFinish(Number(idx), event)"
@@ -255,7 +255,7 @@
                         </div>
                         <div class="flex items-center gap-3">
                           <n-upload
-                            action="http://localhost:8080/api/blogs/upload?type=about"
+                            action="/api/blogs/upload?type=about"
                             :headers="uploadHeaders"
                             :show-file-list="false"
                             @finish="(event) => handleFragmentUploadFinish(Number(idx), event)"

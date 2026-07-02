@@ -31,7 +31,7 @@
                 <div class="flex items-center gap-2 shrink-0 justify-end sm:justify-start">
                   <n-button secondary size="small" class="shrink-0" @click="openGallerySelect('logoUrl')">相册选择</n-button>
                   <n-upload
-                    action="http://localhost:8080/api/blogs/upload?type=brand"
+                    action="/api/blogs/upload?type=brand"
                     :headers="uploadHeaders"
                     :show-file-list="false"
                     class="flex shrink-0"
@@ -62,7 +62,7 @@
               <div class="flex items-center gap-2 shrink-0 justify-end sm:justify-start">
                 <n-button secondary size="small" class="shrink-0" @click="openGallerySelect('faviconUrl')">相册选择</n-button>
                 <n-upload
-                  action="http://localhost:8080/api/blogs/upload?type=brand"
+                  action="/api/blogs/upload?type=brand"
                   :headers="uploadHeaders"
                   :show-file-list="false"
                   class="flex shrink-0"
@@ -110,7 +110,7 @@
               <div class="flex items-center gap-2 shrink-0 justify-end sm:justify-start">
                 <n-button secondary size="small" class="shrink-0" @click="openGallerySelect('heroBgUrl')">相册选择</n-button>
                 <n-upload
-                  action="http://localhost:8080/api/blogs/upload?type=brand"
+                  action="/api/blogs/upload?type=brand"
                   :headers="uploadHeaders"
                   :show-file-list="false"
                   class="flex shrink-0"

@@ -33,7 +33,15 @@
           class="min-w-36 lg:max-w-40"
         />
 
-        <button 
+        <button
+          class="px-4 py-2 text-xs font-semibold rounded-xl bg-(--archive-bg) border border-(--archive-border) text-(--archive-text) hover:bg-(--archive-border)/40 active:scale-[0.98] transition-all flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap"
+          @click="viewMode = viewMode === 'folder' ? 'flat' : 'folder'; page = 1;"
+        >
+          <span :class="viewMode === 'folder' ? 'i-mdi-format-list-bulleted' : 'i-mdi-folder-outline'"></span>
+          <span>{{ viewMode === 'folder' ? '平铺视图' : '文件夹视图' }}</span>
+        </button>
+
+        <button
           class="px-4 py-2 text-xs font-semibold rounded-xl bg-(--archive-bg) border border-(--archive-border) text-(--archive-text) hover:bg-(--archive-border)/40 active:scale-[0.98] transition-all flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap"
           @click="loadData"
         >
@@ -41,13 +49,56 @@
           <span>刷新</span>
         </button>
 
-        <button 
+        <button
           class="px-4 py-2 text-xs font-semibold rounded-xl bg-(--archive-accent) text-white hover:opacity-90 active:scale-[0.98] transition-all flex items-center justify-center gap-1.5 shadow-sm cursor-pointer whitespace-nowrap"
           @click="goToConfig"
         >
           <span class="i-mdi-cog-outline"></span>
           <span>存储配置</span>
         </button>
+      </div>
+    </div>
+
+    <!-- 路径面包屑导航 -->
+    <div v-if="viewMode === 'folder'" class="border border-(--archive-border) rounded-2xl bg-(--archive-bg-card) px-5 py-3 shadow-sm flex items-center justify-between gap-4 transition-all hover:shadow-md">
+      <div class="flex items-center gap-1.5 text-xs font-medium text-left">
+        <span class="tone-muted flex items-center gap-1">
+          <span class="i-mdi-home-outline text-sm"></span>
+          当前位置:
+        </span>
+        <button
+          class="px-2 py-0.5 rounded hover:bg-black/5 dark:hover:bg-white/10 transition-colors cursor-pointer border-none bg-transparent font-semibold"
+          :class="currentDir === '' ? 'text-(--archive-accent)' : 'text-(--archive-text)'"
+          @click="currentDir = ''; page = 1;"
+        >
+          根目录
+        </button>
+
+        <template v-for="(part, idx) in breadcrumbs" :key="idx">
+          <span class="text-(--archive-text)/40">/</span>
+          <button
+            class="px-2 py-0.5 rounded hover:bg-black/5 dark:hover:bg-white/10 transition-colors cursor-pointer border-none bg-transparent font-semibold"
+            :class="idx === breadcrumbs.length - 1 ? 'text-(--archive-accent)' : 'text-(--archive-text)'"
+            @click="navigateToBreadcrumb(idx)"
+          >
+            {{ part }}
+          </button>
+        </template>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <n-button
+          v-if="currentDir !== ''"
+          size="tiny"
+          secondary
+          round
+          @click="goBackDir"
+        >
+          <template #icon>
+            <span class="i-mdi-arrow-up"></span>
+          </template>
+          返回上级
+        </n-button>
       </div>
     </div>
 
@@ -118,76 +169,104 @@
     <!-- 文件卡片网格列表 -->
     <div v-else class="space-y-6">
       <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5">
-        <div 
-          v-for="item in paginatedFiles" 
-          :key="item.fileName"
-          class="border border-(--archive-border) rounded-2xl bg-(--archive-bg-card) p-3 flex flex-col group transition-all duration-300 hover:shadow-md hover:-translate-y-0.5"
+        <div
+          v-for="item in paginatedItems"
+          :key="item.isDir ? 'dir_' + item.path : 'file_' + item.fileName"
+          class="border border-(--archive-border) rounded-2xl bg-(--archive-bg-card) p-3 flex flex-col group transition-all duration-300 hover:shadow-md hover:-translate-y-0.5 cursor-pointer"
+          @click="handleItemClick(item)"
         >
-          <!-- 预览图/占位图 -->
-          <div class="relative w-full h-38 rounded-xl overflow-hidden bg-white/2 dark:bg-white/5 shrink-0">
-            <template v-if="isImage(item.fileName)">
-              <n-image
-                :src="item.url"
-                class="w-full h-full"
-                :img-props="{ class: 'w-full h-full object-cover transition-transform duration-500 group-hover:scale-103' }"
-                show-toolbar-tooltip
-                fallback-src="/life-assets/placeholder.jpg"
-              />
-            </template>
-            <template v-else>
-              <div class="w-full h-full flex flex-col items-center justify-center gap-2 text-(--archive-text)/40 bg-black/5 dark:bg-white/5">
-                <span :class="getFileIcon(item.fileName)" class="text-4xl"></span>
-                <span class="text-[10px] uppercase font-bold tracking-wider opacity-60">
-                  {{ getFileExt(item.fileName) }} 文件
+          <!-- 文件夹卡片 -->
+          <template v-if="item.isDir">
+            <div class="relative w-full h-38 rounded-xl overflow-hidden bg-(--archive-accent)/5 flex flex-col items-center justify-center gap-2.5 shrink-0 transition-colors group-hover:bg-(--archive-accent)/10">
+              <span class="i-mdi-folder text-5xl text-(--archive-accent) drop-shadow-sm transition-transform duration-300 group-hover:scale-105"></span>
+              <span class="text-[10px] uppercase font-bold tracking-wider text-(--archive-accent)/80">
+                文件夹
+              </span>
+            </div>
+
+            <div class="mt-3 flex flex-col text-left grow">
+              <span class="text-xs font-bold text-(--archive-text) truncate" :title="item.name">
+                {{ item.name }}
+              </span>
+              <div class="flex items-center justify-between mt-2.5">
+                <span class="text-[10px] px-1.5 py-0.5 rounded font-medium bg-(--archive-accent)/10 text-(--archive-accent)">
+                  {{ item.childCount }} 个文件
+                </span>
+                <span class="text-[10px] tone-muted">
+                  目录
                 </span>
               </div>
-            </template>
-
-            <!-- 悬浮操作层 -->
-            <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-3">
-              <n-tooltip trigger="hover">
-                <template #trigger>
-                  <button 
-                    class="h-9 w-9 rounded-full bg-white text-gray-800 flex items-center justify-center hover:bg-(--archive-accent) hover:text-white active:scale-95 transition-all shadow cursor-pointer border-none"
-                    @click="copyUrl(item.url)"
-                  >
-                    <span class="i-mdi-content-copy text-base"></span>
-                  </button>
-                </template>
-                复制链接
-              </n-tooltip>
-
-              <n-tooltip trigger="hover">
-                <template #trigger>
-                  <button 
-                    class="h-9 w-9 rounded-full bg-white text-red-600 flex items-center justify-center hover:bg-red-600 hover:text-white active:scale-95 transition-all shadow cursor-pointer border-none"
-                    @click="handleDelete(item)"
-                  >
-                    <span class="i-mdi-trash-can-outline text-base"></span>
-                  </button>
-                </template>
-                删除文件
-              </n-tooltip>
             </div>
-          </div>
+          </template>
 
-          <!-- 详细信息区 -->
-          <div class="mt-3 flex flex-col text-left grow">
-            <span 
-              class="text-xs font-bold text-(--archive-text) truncate" 
-              :title="item.fileName"
-            >
-              {{ getFileNameOnly(item.fileName) }}
-            </span>
-            <div class="flex items-center justify-between mt-2.5">
-              <span class="text-[10px] px-1.5 py-0.5 rounded font-medium bg-black/5 dark:bg-white/10 tone-muted">
-                {{ formatBytes(item.size) }}
-              </span>
-              <span class="text-[10px] tone-muted">
-                {{ formatTime(item.updateTime) }}
-              </span>
+          <!-- 文件卡片 -->
+          <template v-else>
+            <!-- 预览图/占位图 -->
+            <div class="relative w-full h-38 rounded-xl overflow-hidden bg-white/2 dark:bg-white/5 shrink-0">
+              <template v-if="isImage(item.fileName)">
+                <n-image
+                  :src="item.url"
+                  class="w-full h-full"
+                  :img-props="{ class: 'w-full h-full object-cover transition-transform duration-500 group-hover:scale-103' }"
+                  show-toolbar-tooltip
+                  fallback-src="/life-assets/placeholder.jpg"
+                />
+              </template>
+              <template v-else>
+                <div class="w-full h-full flex flex-col items-center justify-center gap-2 text-(--archive-text)/40 bg-black/5 dark:bg-white/5">
+                  <span :class="getFileIcon(item.fileName)" class="text-4xl"></span>
+                  <span class="text-[10px] uppercase font-bold tracking-wider opacity-60">
+                    {{ getFileExt(item.fileName) }} 文件
+                  </span>
+                </div>
+              </template>
+
+              <!-- 悬浮操作层 (阻止冒泡防误触) -->
+              <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-3" @click.stop>
+                <n-tooltip trigger="hover">
+                  <template #trigger>
+                    <button
+                      class="h-9 w-9 rounded-full bg-white text-gray-800 flex items-center justify-center hover:bg-(--archive-accent) hover:text-white active:scale-95 transition-all shadow cursor-pointer border-none"
+                      @click="copyUrl(item.url)"
+                    >
+                      <span class="i-mdi-content-copy text-base"></span>
+                    </button>
+                  </template>
+                  复制链接
+                </n-tooltip>
+
+                <n-tooltip trigger="hover">
+                  <template #trigger>
+                    <button
+                      class="h-9 w-9 rounded-full bg-white text-red-600 flex items-center justify-center hover:bg-red-600 hover:text-white active:scale-95 transition-all shadow cursor-pointer border-none"
+                      @click="handleDelete(item)"
+                    >
+                      <span class="i-mdi-trash-can-outline text-base"></span>
+                    </button>
+                  </template>
+                  删除文件
+                </n-tooltip>
+              </div>
             </div>
-          </div>
+
+            <!-- 详细信息区 -->
+            <div class="mt-3 flex flex-col text-left grow">
+              <span
+                class="text-xs font-bold text-(--archive-text) truncate"
+                :title="item.fileName"
+              >
+                {{ item.name }}
+              </span>
+              <div class="flex items-center justify-between mt-2.5">
+                <span class="text-[10px] px-1.5 py-0.5 rounded font-medium bg-black/5 dark:bg-white/10 tone-muted">
+                  {{ formatBytes(item.size) }}
+                </span>
+                <span class="text-[10px] tone-muted">
+                  {{ formatTime(item.updateTime) }}
+                </span>
+              </div>
+            </div>
+          </template>
         </div>
       </div>
 
@@ -196,7 +275,7 @@
         <n-pagination
           v-model:page="page"
           v-model:page-size="pageSize"
-          :item-count="filteredFiles.length"
+          :item-count="totalItemsCount"
           :page-sizes="[10, 20, 30, 40, 50]"
           show-size-picker
           class="archive-pagination"
@@ -224,6 +303,10 @@ const files = ref<FileItem[]>([])
 const searchQuery = ref('')
 const typeFilter = ref('all')
 
+// 视图与路径参数
+const viewMode = ref<'folder' | 'flat'>('folder')
+const currentDir = ref('')
+
 // 分页状态
 const page = ref(1)
 const pageSize = ref(10)
@@ -239,7 +322,14 @@ watch([searchQuery, typeFilter, pageSize], () => {
   page.value = 1
 })
 
-// 计算属性：当前存储介质的工作空间/桶名标题
+// 当用户输入搜索内容时，自动切换为“平铺视图”，以方便全局快速检索文件
+watch(searchQuery, (newVal) => {
+  if (newVal.trim()) {
+    viewMode.value = 'flat'
+  }
+})
+
+// 计算属性：当前工作空间/桶名标题
 const getBucketTitle = computed(() => {
   if (!storageInfo.value) return 'uploads'
   const info = storageInfo.value
@@ -248,7 +338,13 @@ const getBucketTitle = computed(() => {
   return 'uploads/ (本地文件夹)'
 })
 
-// 文件过滤列表
+// 计算属性：路径面包屑片段
+const breadcrumbs = computed(() => {
+  if (!currentDir.value) return []
+  return currentDir.value.split('/')
+})
+
+// 文件过滤列表 (搜索与类型)
 const filteredFiles = computed(() => {
   let list = files.value
 
@@ -268,11 +364,100 @@ const filteredFiles = computed(() => {
   return list
 })
 
-// 分页计算后的展示文件列表
-const paginatedFiles = computed(() => {
+interface FolderItem {
+  isDir: true
+  name: string
+  path: string
+  childCount: number
+}
+
+interface FileItemWrap {
+  isDir: false
+  fileName: string
+  name: string
+  url: string
+  size: number
+  updateTime: number
+  storageType: string
+}
+
+type DisplayItem = FolderItem | FileItemWrap
+
+// 计算属性：当前文件夹下的所有子文件夹与文件集合 (虚拟文件树解析)
+const currentItems = computed<DisplayItem[]>(() => {
+  const list = filteredFiles.value
+  const foldersMap = new Map<string, { path: string; files: any[] }>()
+  const filesList: FileItemWrap[] = []
+
+  const currentPrefix = currentDir.value ? (currentDir.value.endsWith('/') ? currentDir.value : currentDir.value + '/') : ''
+
+  list.forEach(item => {
+    const name = item.fileName
+    if (currentPrefix && !name.startsWith(currentPrefix)) {
+      return
+    }
+
+    const relative = currentPrefix ? name.substring(currentPrefix.length) : name
+
+    if (relative.includes('/')) {
+      const dirName = relative.split('/')[0]
+      const fullSubDirPath = currentPrefix + dirName
+
+      if (!foldersMap.has(dirName)) {
+        foldersMap.set(dirName, { path: fullSubDirPath, files: [] })
+      }
+      foldersMap.get(dirName)!.files.push(item)
+    } else {
+      filesList.push({
+        isDir: false,
+        fileName: item.fileName,
+        name: relative,
+        url: item.url,
+        size: item.size,
+        updateTime: item.updateTime,
+        storageType: item.storageType
+      })
+    }
+  })
+
+  // 转换为展示用文件夹对象列表
+  const displayFolders: FolderItem[] = Array.from(foldersMap.entries()).map(([name, val]) => ({
+    isDir: true,
+    name,
+    path: val.path,
+    childCount: val.files.length
+  }))
+
+  // 文件夹按拼音/字母排序在前，文件保持更新时间倒序在后
+  return [
+    ...displayFolders.sort((a, b) => a.name.localeCompare(b.name)),
+    ...filesList
+  ]
+})
+
+// 分页切片数据源
+const paginatedItems = computed(() => {
   const start = (page.value - 1) * pageSize.value
   const end = start + pageSize.value
-  return filteredFiles.value.slice(start, end)
+
+  if (viewMode.value === 'flat') {
+    return filteredFiles.value.map(item => ({
+      isDir: false as const,
+      fileName: item.fileName,
+      name: getFileNameOnly(item.fileName),
+      url: item.url,
+      size: item.size,
+      updateTime: item.updateTime,
+      storageType: item.storageType
+    })).slice(start, end)
+  } else {
+    return currentItems.value.slice(start, end)
+  }
+})
+
+// 分页所用总项数
+const totalItemsCount = computed(() => {
+  return viewMode.value === 'flat' ? filteredFiles.value.length : currentItems.value.length
 })
 
 // 总文件占用容量格式化
@@ -280,6 +465,32 @@ const totalSizeFormatted = computed(() => {
   const sumBytes = filteredFiles.value.reduce((acc, cur) => acc + (cur.size || 0), 0)
   return formatBytes(sumBytes)
 })
+
+// 点击网格卡片的回调
+const handleItemClick = (item: DisplayItem) => {
+  if (item.isDir) {
+    currentDir.value = item.path
+    page.value = 1
+  }
+}
+
+// 导航到指定面包屑层级
+const navigateToBreadcrumb = (index: number) => {
+  const parts = currentDir.value.split('/')
+  currentDir.value = parts.slice(0, index + 1).join('/')
+  page.value = 1
+}
+
+// 返回上一级文件夹
+const goBackDir = () => {
+  const parts = currentDir.value.split('/')
+  if (parts.length <= 1) {
+    currentDir.value = ''
+  } else {
+    currentDir.value = parts.slice(0, -1).join('/')
+  }
+  page.value = 1
+}
 
 // 加载后台数据
 const loadData = async () => {
@@ -318,7 +529,7 @@ const copyUrl = async (url: string) => {
 }
 
 // 删除文件操作
-const handleDelete = (item: FileItem) => {
+const handleDelete = (item: any) => {
   dialog.warning({
     title: '强物理删除确认',
     content: `您确定要彻底删除文件「${getFileNameOnly(item.fileName)}」吗？该删除行为将在存储中进行物理擦除，不可撤销。已在博客内容中引用该文件的链接将会失效。`,
@@ -329,7 +540,6 @@ const handleDelete = (item: FileItem) => {
         const response = await deleteFile(item.fileName)
         if (response.data?.code === 200) {
           message.success('文件物理删除成功 🗑️')
-          // 重新加载数据刷新列表
           await loadData()
         } else {
           throw new Error(response.data?.msg || '删除失败')

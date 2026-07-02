@@ -252,7 +252,7 @@
                   <div class="flex gap-2 items-center">
                     <n-input v-model:value="formModel.reading.coverUrl" placeholder="输入外部路径，或点击上传" class="archive-input flex-1" />
                     <n-upload
-                      action="http://localhost:8080/api/blogs/upload?type=now"
+                      action="/api/blogs/upload?type=now"
                       :headers="uploadHeaders"
                       :show-file-list="false"
                       @finish="handleUploadFinish"
@@ -475,7 +475,7 @@
                   <div class="flex gap-2 w-full">
                     <n-input v-model:value="bgm.src" placeholder="例如: /assets/music/mr-lawrence.mp3" class="archive-input font-mono flex-1" />
                     <n-upload
-                      action="http://localhost:8080/api/blogs/upload?type=now"
+                      action="/api/blogs/upload?type=now"
                       :headers="uploadHeaders"
                       :show-file-list="false"
                       @finish="(options: any) => handleAudioUploadFinish(options, bgm)"
@@ -529,7 +529,7 @@
                   <div class="flex gap-2 w-full">
                     <n-input v-model:value="noise.src" placeholder="例如: /assets/music/rain.mp3" class="archive-input font-mono flex-1" />
                     <n-upload
-                      action="http://localhost:8080/api/blogs/upload?type=now"
+                      action="/api/blogs/upload?type=now"
                       :headers="uploadHeaders"
                       :show-file-list="false"
                       @finish="(options: any) => handleAudioUploadFinish(options, noise)"

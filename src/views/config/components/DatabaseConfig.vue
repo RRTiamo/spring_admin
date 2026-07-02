@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <div class="space-y-6">
     <div class="archive-card p-5 sm:p-6 bg-(--archive-bg-card) border border-(--archive-border) rounded-2xl">
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-(--archive-border)/40">
@@ -69,7 +69,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useMessage, NForm, NFormItem, NInput, NButton } from 'naive-ui'
-import axios from 'axios'
+import request from '@/api/request'
 
 const getBlogUrl = (path: string) => {
   const protocol = window.location.protocol
@@ -98,7 +98,7 @@ const dbConfig = ref({
 const fetchDbConfig = async () => {
   try {
     const token = localStorage.getItem('satoken')
-    const response = await axios.get('http://localhost:8080/api/config/database', {
+    const response = await request.get('/config/database', {
       headers: { satoken: token }
     })
     if (response.data && response.data.code === 200) {
@@ -113,7 +113,7 @@ const handleSave = async () => {
   saving.value = true
   const token = localStorage.getItem('satoken')
   try {
-    const response = await axios.post('http://localhost:8080/api/config/database', dbConfig.value, {
+    const response = await request.post('/config/database', dbConfig.value, {
       headers: { satoken: token }
     })
     if (response.data && response.data.code === 200) {

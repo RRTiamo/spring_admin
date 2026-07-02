@@ -153,7 +153,7 @@
               
               <div class="flex flex-wrap items-center gap-2 mb-2">
                 <n-upload
-                  action="http://localhost:8080/api/blogs/upload?type=theme"
+                  action="/api/blogs/upload?type=theme"
                   :headers="uploadHeaders"
                   :show-file-list="false"
                   @finish="handleBgUploadFinish"
@@ -260,7 +260,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useMessage, NForm, NFormItem, NInput, NInputNumber, NSwitch, NUpload, NButton, NModal, NSpin } from 'naive-ui'
-import axios from 'axios'
+import request from '@/api/request'
 
 const message = useMessage()
 const saving = ref(false)
@@ -303,7 +303,7 @@ const uploadHeaders = computed(() => ({
 const fetchConfigs = async () => {
   try {
     const token = localStorage.getItem('satoken')
-    const response = await axios.get('http://localhost:8080/api/config/list', {
+    const response = await request.get('/config/list', {
       headers: { satoken: token }
     })
     
@@ -362,7 +362,7 @@ const handleSave = async () => {
   ]
 
   try {
-    const response = await axios.post('http://localhost:8080/api/config/update-batch', payload, {
+    const response = await request.post('/config/update-batch', payload, {
       headers: { satoken: token }
     })
     
@@ -412,7 +412,7 @@ const openGallerySelect = async () => {
   selectedPhotoUrl.value = theme.value.bgImageUrl || ''
   const token = localStorage.getItem('satoken')
   try {
-    const response = await axios.get('http://localhost:8080/api/gallery/list', {
+    const response = await request.get('/gallery/list', {
       headers: { satoken: token }
     })
     if (response.data && response.data.code === 200) {

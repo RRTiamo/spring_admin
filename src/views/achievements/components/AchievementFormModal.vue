@@ -47,7 +47,7 @@
                 class="flex-1"
               />
               <n-upload
-                action="http://localhost:8080/api/blogs/upload?type=achieve"
+                action="/api/blogs/upload?type=achieve"
                 :headers="uploadHeaders"
                 :show-file-list="false"
                 @finish="handleUploadFinish"

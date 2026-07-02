@@ -101,7 +101,7 @@
               
               <n-upload
                 v-if="letterImagesList.length < 2"
-                action="http://localhost:8080/api/blogs/upload?type=letter"
+                action="/api/blogs/upload?type=letter"
                 :headers="uploadHeaders"
                 :show-file-list="false"
                 @finish="handleUploadFinish"

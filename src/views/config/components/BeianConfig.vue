@@ -38,7 +38,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useMessage, NForm, NFormItem, NInput, NButton } from 'naive-ui'
-import axios from 'axios'
+import request from '@/api/request'
 
 const message = useMessage()
 const saving = ref(false)
@@ -53,7 +53,7 @@ const beian = ref({
 const fetchConfigs = async () => {
   try {
     const token = localStorage.getItem('satoken')
-    const response = await axios.get('http://localhost:8080/api/config/list', {
+    const response = await request.get('/config/list', {
       headers: { satoken: token }
     })
     
@@ -86,7 +86,7 @@ const handleSave = async () => {
   ]
   
   try {
-    const response = await axios.post('http://localhost:8080/api/config/update-batch', payload, {
+    const response = await request.post('/config/update-batch', payload, {
       headers: { satoken: token }
     })
     

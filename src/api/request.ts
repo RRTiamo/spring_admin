@@ -63,8 +63,10 @@ function processDates(obj: any): any {
   return obj
 }
 
+const apiBaseUrl = (import.meta.env.VITE_API_BASE_URL || '/api').replace(/\/+$/, '')
+
 const request = axios.create({
-  baseURL: 'http://localhost:8080/api',
+  baseURL: apiBaseUrl,
   timeout: 15000,
 })
 
