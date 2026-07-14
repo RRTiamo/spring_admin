@@ -442,9 +442,23 @@
             治愈电台配置 (Radio)
           </h4>
           <div class="space-y-6 pt-2">
+            <!-- 外观模式选择 -->
+            <n-divider title-placement="left" class="!my-4 text-xs font-bold">播放器外观样式 (Player Style)</n-divider>
+            <div class="p-4 border border-(--archive-border) rounded-xl bg-white/10 dark:bg-white/5 space-y-3">
+              <div class="text-xs text-(--archive-text-sub)">选择博客前台呈现的全局音乐播放器形态：</div>
+              <n-radio-group v-model:value="formModel.radio.playerStyle" name="playerStyleGroup" size="medium">
+                <n-space>
+                  <n-radio value="bottom-bar">
+                    沉浸式底部通栏播放条 (Bottom Bar - 推荐)
+                  </n-radio>
+                </n-space>
+              </n-radio-group>
+            </div>
+
             <!-- 背景音乐曲目 -->
             <n-divider title-placement="left" class="!my-4 text-xs font-bold">背景音乐曲目库 (BGM List)</n-divider>
             <div class="space-y-4">
+
               <div
                 v-for="(bgm, idx) in formModel.radio?.bgmList"
                 :key="idx"
